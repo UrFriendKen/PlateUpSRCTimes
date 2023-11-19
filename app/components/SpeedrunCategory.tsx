@@ -211,13 +211,13 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 
 	useEffect(() => {
 		const tempSubcatKeys = [];
-		const tempHeaders = [];
+		let tempHeaders = [];
 		for (var varKey in variables) {
 			const variable = variables[varKey];
 			tempSubcatKeys.push(variable.id);
 			tempHeaders.push(variable.name);
 		}
-		tempHeaders.concat(["Players", "Time", "Status"]);
+		tempHeaders = tempHeaders.concat(["Players", "Time", "Status"]);
 		setSubcatKeys(tempSubcatKeys);
 		setHeaders(tempHeaders);
 	}, [variables]);
