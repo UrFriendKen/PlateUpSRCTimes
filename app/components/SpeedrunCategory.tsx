@@ -1,7 +1,11 @@
+"use client";
 import React from "react";
 import Table from "./Table";
 import { FetchJSON, FetchRawJSON } from "./FetchData";
 import { ToReadableTimeString } from "./StringUtils";
+import { useState, useEffect } from "react";
+import Loading from "./Loading";
+import Time from "./Time";
 
 interface SpeedrunCategoryProp {
 	gameID: string;
@@ -131,7 +135,7 @@ async function GetRuns(
 	return topRunsArray;
 }
 
-export default async function SpeedrunCategory(prop: SpeedrunCategoryProp) {
+export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 	function SortByTime(run1: Run, run2: Run) {
 		return SortNumbers(run1.time, run2.time);
 	}
@@ -188,27 +192,54 @@ export default async function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 			run2.subcats["2lg135el"]
 		);
 	}
-	const variables = await GetVariables(prop.categoryID);
-	let headers = [];
-	const subcatKeys: string[] = [];
-	for (var varKey in variables) {
-		const variable = variables[varKey];
-		subcatKeys.push(variable.id);
-		headers.push(variable.name);
-	}
-	headers = headers.concat(["Players", "Time", "Status"]);
 
-	let topRuns = await GetRuns(prop.gameID, prop.categoryID, subcatKeys);
-	topRuns = topRuns
-		.sort(SortByTime)
-		.sort(SortByDishes)
-		.sort(SortByPlayers)
-		.sort(SortByMapSetting)
-		.sort(SortBySeed)
-		.sort(SortByPatches);
+	const [variables, setVariables] = useState<{ [id: string]: Variable }>({});
+	const [variablesLoading, setVariablesLoading] = useState(true);
+
+	const [topRuns, setTopRuns] = useState<Run[]>([]);
+	const [topRunsLoading, setTopRunsLoading] = useState(true);
+
+	useEffect(() => {
+		GetVariables(prop.categoryID).then((data) => {
+			setVariables(data);
+			setVariablesLoading(false);
+		});
+	}, [prop.categoryID]);
+
+	const [headers, setHeaders] = useState<string[]>([]);
+	const [subcatKeys, setSubcatKeys] = useState<string[]>([]);
+
+	useEffect(() => {
+		const tempSubcatKeys = [];
+		const tempHeaders = [];
+		for (var varKey in variables) {
+			const variable = variables[varKey];
+			tempSubcatKeys.push(variable.id);
+			tempHeaders.push(variable.name);
+		}
+		tempHeaders.concat(["Players", "Time", "Status"]);
+		setSubcatKeys(tempSubcatKeys);
+		setHeaders(tempHeaders);
+	}, [variables]);
+
+	useEffect(() => {
+		GetRuns(prop.gameID, prop.categoryID, subcatKeys).then((data) => {
+			data.sort(SortByTime)
+				.sort(SortByDishes)
+				.sort(SortByPlayers)
+				.sort(SortByMapSetting)
+				.sort(SortBySeed)
+				.sort(SortByPatches);
+			setTopRuns(data);
+			setTopRunsLoading(false);
+		});
+	}, [prop.gameID, prop.categoryID, subcatKeys]);
+
+	if (variablesLoading || topRunsLoading) return <Loading />;
 
 	return (
 		<>
+			<Time title="Rendered at: " />
 			<p className="text-xl font-bold flex justify-center">
 				{prop.categoryName}
 			</p>

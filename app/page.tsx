@@ -1,9 +1,6 @@
 import Link from "next/link";
-import Time from "./components/Time";
 import SpeedrunCategory from "./components/SpeedrunCategory";
 import { FetchJSON } from "./components/FetchData";
-import { Suspense } from "react";
-import Loading from "./components/Loading";
 
 async function GetPlateUpID() {
 	const json = await FetchJSON("games?abbreviation=plateup");
@@ -33,18 +30,15 @@ export default async function Home() {
 			<br />
 			<br />
 			<div>
-				<Suspense fallback={<Loading />}>
-					<Time title="Rendered at: " />
-					{Object.keys(categoryIDs).map((key) => (
-						<div key={key}>
-							<SpeedrunCategory
-								gameID={gameID}
-								categoryID={key}
-								categoryName={categoryIDs[key]}
-							/>
-						</div>
-					))}
-				</Suspense>
+				{Object.keys(categoryIDs).map((key) => (
+					<div key={key}>
+						<SpeedrunCategory
+							gameID={gameID}
+							categoryID={key}
+							categoryName={categoryIDs[key]}
+						/>
+					</div>
+				))}
 			</div>
 		</div>
 	);
