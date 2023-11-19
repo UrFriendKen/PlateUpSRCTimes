@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 
 interface TableProps {
@@ -8,9 +7,9 @@ interface TableProps {
 
 const Table = ({ header, children }: TableProps) => {
 	return (
-		<table className="table table-pin-rows">
+		<table className="table table-zebra table-pin-rows">
 			<thead>
-				<tr className="text-lg">
+				<tr>
 					{header.map((text) => {
 						return <th key={text}>{text}</th>;
 					})}

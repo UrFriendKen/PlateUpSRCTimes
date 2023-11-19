@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import Time from "./components/Time";
 import SpeedrunCategory from "./components/SpeedrunCategory";

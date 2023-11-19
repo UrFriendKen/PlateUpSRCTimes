@@ -1,5 +1,3 @@
-"use client";
-
 const apiRoot = "https://www.speedrun.com/api/v1";
 export async function FetchJSON(endpoint: string) {
 	return await FetchRawJSON(`${apiRoot}/${endpoint}`);
