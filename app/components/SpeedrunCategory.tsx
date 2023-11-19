@@ -213,9 +213,13 @@ export default async function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 							<tr key={run.id} className="hover">
 								{subcatKeys.map((subcatKey) => {
 									if (!(subcatKey in run.subcats))
-										return <td />;
+										return (
+											<td
+												key={`${run.id}_${subcatKey}`}
+											/>
+										);
 									return (
-										<td>
+										<td key={`${run.id}_${subcatKey}`}>
 											{
 												variables[subcatKey].values[
 													run.subcats[subcatKey]
