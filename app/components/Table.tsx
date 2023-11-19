@@ -11,7 +11,7 @@ const Table = ({ header, children }: TableProps) => {
 			<thead>
 				<tr className="text-lg">
 					{header.map((text) => {
-						return <th>{text}</th>;
+						return <th key={text}>{text}</th>;
 					})}
 				</tr>
 			</thead>
