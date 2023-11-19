@@ -141,13 +141,13 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 	}
 	function GetPlayerCountFromDesc(playerCountDesc: string | null) {
 		switch (playerCountDesc) {
-			case "Solo":
+			case "z19n33kq":
 				return 1;
-			case "Duo":
+			case "p127nnkq":
 				return 2;
-			case "Trio":
+			case "81p9jjkq":
 				return 3;
-			case "Quad":
+			case "xqkvddyl":
 				return 4;
 			default:
 				return 5;
@@ -155,16 +155,8 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 	}
 
 	function SortByPlayers(run1: Run, run2: Run) {
-		let run1Count = null;
-		let run2Count = null;
-		if (variables["wlekw94l"]) {
-			if (run1.subcats["wlekw94l"])
-				run1Count =
-					variables["wlekw94l"]?.values[run1.subcats["wlekw94l"]];
-			if (run2.subcats["wlekw94l"])
-				run2Count =
-					variables["wlekw94l"]?.values[run2.subcats["wlekw94l"]];
-		}
+		const run1Count = run1.subcats["wlekw94l"];
+		const run2Count = run2.subcats["wlekw94l"];
 		return SortNumbers(
 			GetPlayerCountFromDesc(run1Count),
 			GetPlayerCountFromDesc(run2Count)
@@ -263,12 +255,14 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 								);
 							})}
 							<td>
-								{run.players.map((player) => {
+								{run.players.map((player, index) => {
 									return (
-										<>
+										<React.Fragment
+											key={`${run.id}_player${index}`}
+										>
 											{player}
 											<br />
-										</>
+										</React.Fragment>
 									);
 								})}
 							</td>
