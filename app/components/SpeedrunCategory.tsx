@@ -1,6 +1,5 @@
 import React from "react";
 import Table from "./Table";
-import { Suspense } from "react";
 import { FetchJSON, FetchRawJSON } from "./FetchData";
 import { ToReadableTimeString } from "./StringUtils";
 
@@ -68,12 +67,14 @@ function SortStringsReverse(string1: string, string2: string) {
 	return SortStrings(string2, string1);
 }
 
-async function GetRuns(gameID: string, categoryID: string) {
-	function SortByTime(run1: Run, run2: Run) {
-		return SortNumbers(run1.time, run2.time);
-	}
-	let runsData: any = [];
+async function GetRuns(
+	gameID: string,
+	categoryID: string,
+	subcatKeys: string[]
+) {
 	let nextlink;
+	let runs: any = [];
+	const topRuns: { [id: string]: Run } = {};
 	do {
 		let json;
 		if (nextlink) json = await FetchRawJSON(nextlink);
@@ -81,8 +82,8 @@ async function GetRuns(gameID: string, categoryID: string) {
 			json = await FetchJSON(
 				`runs?game=${gameID}&category=${categoryID}&orderby=submitted&direction=desc&embed=players&max=200`
 			);
-		runsData = runsData.concat(json["data"]);
 		nextlink = null;
+		runs = runs.concat(json["data"]);
 		for (var link of json["pagination"]["links"]) {
 			if (link["rel"] == "next") {
 				nextlink = link["uri"];
@@ -90,13 +91,25 @@ async function GetRuns(gameID: string, categoryID: string) {
 			}
 		}
 	} while (nextlink);
-	const leaderboard: Run[] = [];
-	for (var runData of runsData) {
+	for (var runData of runs) {
 		const status = runData["status"]["status"];
 		if (status != "verified" && status != "new") continue;
+
+		const subcats = runData["values"];
+
+		const runKeyValues = subcatKeys.map((subcatKey) =>
+			subcatKey in subcats ? subcats[subcatKey] : ""
+		);
+		var runKey = runKeyValues.join(",");
+		const runTime = runData["times"]["primary_t"];
+		let timediff = -1;
+		if (runKey in topRuns) {
+			timediff = runTime - topRuns[runKey].time;
+		}
+		if (timediff > 0) continue;
 		const run = new Run();
 		run.id = runData["id"];
-		run.time = runData["times"]["primary_t"];
+		run.time = runTime;
 		for (var playerData of runData["players"]["data"]) {
 			switch (playerData["rel"]) {
 				case "user": {
@@ -110,15 +123,18 @@ async function GetRuns(gameID: string, categoryID: string) {
 			}
 		}
 
-		run.subcats = runData["values"];
+		run.subcats = subcats;
 		run.status = runData["status"]["status"];
-		leaderboard.push(run);
+		topRuns[runKey] = run;
 	}
-
-	return leaderboard.sort(SortByTime);
+	const topRunsArray = Object.values(topRuns);
+	return topRunsArray;
 }
 
 export default async function SpeedrunCategory(prop: SpeedrunCategoryProp) {
+	function SortByTime(run1: Run, run2: Run) {
+		return SortNumbers(run1.time, run2.time);
+	}
 	function GetPlayerCountFromDesc(playerCountDesc: string | null) {
 		switch (playerCountDesc) {
 			case "Solo":
@@ -182,69 +198,55 @@ export default async function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 	}
 	headers = headers.concat(["Players", "Time", "Status"]);
 
-	let leaderboard = await GetRuns(prop.gameID, prop.categoryID);
-	leaderboard = leaderboard
+	let topRuns = await GetRuns(prop.gameID, prop.categoryID, subcatKeys);
+	topRuns = topRuns
+		.sort(SortByTime)
 		.sort(SortByDishes)
 		.sort(SortByPlayers)
 		.sort(SortByMapSetting)
 		.sort(SortBySeed)
 		.sort(SortByPatches);
-	const topRuns: { [id: string]: Run } = {};
-	for (var run of leaderboard) {
-		const runKeyValues = subcatKeys.map((subcatKey) =>
-			subcatKey in run.subcats ? run.subcats[subcatKey] : ""
-		);
-		var runKey = runKeyValues.join(",");
-		if (runKey in topRuns) {
-			continue;
-		}
-		topRuns[runKey] = run;
-	}
 
 	return (
 		<>
 			<p className="text-xl font-bold flex justify-center">
 				{prop.categoryName}
 			</p>
-			<Suspense>
-				<Table header={headers}>
-					{Object.values(topRuns).map((run) => {
-						return (
-							<tr key={run.id} className="hover">
-								{subcatKeys.map((subcatKey) => {
-									if (!(subcatKey in run.subcats))
-										return (
-											<td
-												key={`${run.id}_${subcatKey}`}
-											/>
-										);
+			<Table header={headers}>
+				{Object.values(topRuns).map((run) => {
+					return (
+						<tr key={run.id} className="hover">
+							{subcatKeys.map((subcatKey) => {
+								if (!(subcatKey in run.subcats))
 									return (
-										<td key={`${run.id}_${subcatKey}`}>
-											{
-												variables[subcatKey].values[
-													run.subcats[subcatKey]
-												]
-											}
-										</td>
+										<td key={`${run.id}_${subcatKey}`} />
+									);
+								return (
+									<td key={`${run.id}_${subcatKey}`}>
+										{
+											variables[subcatKey].values[
+												run.subcats[subcatKey]
+											]
+										}
+									</td>
+								);
+							})}
+							<td>
+								{run.players.map((player) => {
+									return (
+										<>
+											{player}
+											<br />
+										</>
 									);
 								})}
-								<td>
-									{run.players.map((player) => {
-										return (
-											<>
-												{player}
-												<br />
-											</>
-										);
-									})}
-								</td>
-								<td>{ToReadableTimeString(run.time)}</td>
-								<td>{run.status}</td>
-							</tr>
-						);
-					})}
-				</Table>
-			</Suspense>
+							</td>
+							<td>{ToReadableTimeString(run.time)}</td>
+							<td>{run.status}</td>
+						</tr>
+					);
+				})}
+			</Table>
 		</>
 	);
 }

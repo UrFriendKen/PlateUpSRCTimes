@@ -8,7 +8,7 @@ const config: Config = {
   ],
   plugins: [require("daisyui")],
   daisyui: {
-    themes: ["light", "dark"]
+    themes: ["dracula"]
 }
 }
 export default config

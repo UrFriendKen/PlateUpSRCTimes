@@ -4,7 +4,7 @@ export async function FetchJSON(endpoint: string) {
 }
 
 export async function FetchRawJSON(url: string) {
-	const res = await fetch(url, { next: { revalidate: 0 } });
+	const res = await fetch(url, { next: { revalidate: 600 } });
 	const json = await res.json();
 	return json;
 }

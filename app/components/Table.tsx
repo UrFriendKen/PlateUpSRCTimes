@@ -10,8 +10,8 @@ const Table = ({ header, children }: TableProps) => {
 		<table className="table table-zebra table-pin-rows">
 			<thead>
 				<tr>
-					{header.map((text) => {
-						return <th key={text}>{text}</th>;
+					{header.map((text, index) => {
+						return <th key={index}>{text}</th>;
 					})}
 				</tr>
 			</thead>
