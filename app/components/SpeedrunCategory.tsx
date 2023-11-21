@@ -47,6 +47,7 @@ async function GetVariables(categoryID: string) {
 class Run {
 	id: string = "";
 	subcats: { [id: string]: string } = {};
+	dish: string = "";
 	players: string[] = [];
 	time: number = 0;
 	status: string = "";
@@ -174,8 +175,21 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 		);
 	}
 
+	function PopulateDishes(
+		variables: { [id: string]: Variable },
+		runs: Run[]
+	) {
+		if (!("wl3d19v8" in variables)) return;
+		const dishVariable = variables["wl3d19v8"];
+		for (var run of runs) {
+			const dishValueID = run.subcats["wl3d19v8"];
+			if (!dishValueID) continue;
+			run.dish = dishVariable.values[dishValueID];
+		}
+	}
+
 	function SortByDishes(run1: Run, run2: Run) {
-		return SortStrings(run1.subcats["wl3d19v8"], run2.subcats["wl3d19v8"]);
+		return SortStrings(run1.dish, run2.dish);
 	}
 
 	function SortBySeed(run1: Run, run2: Run) {
@@ -216,6 +230,7 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 
 	useEffect(() => {
 		GetRuns(prop.gameID, prop.categoryID, subcatKeys).then((data) => {
+			PopulateDishes(variables, data);
 			data.sort(SortByTime)
 				.sort(SortByDishes)
 				.sort(SortByPlayers)
@@ -225,7 +240,7 @@ export default function SpeedrunCategory(prop: SpeedrunCategoryProp) {
 			setTopRuns(data);
 			setTopRunsLoading(false);
 		});
-	}, [prop.gameID, prop.categoryID, subcatKeys]);
+	}, [prop.gameID, prop.categoryID, variables, subcatKeys]);
 
 	if (variablesLoading || topRunsLoading) return <Loading />;
 
