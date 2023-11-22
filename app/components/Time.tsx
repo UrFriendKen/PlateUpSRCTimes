@@ -5,12 +5,13 @@ interface TimeProp {
 }
 
 const Time = ({ title }: TimeProp) => {
+	const dateStr = new Date().toLocaleDateString();
 	const timeStr = new Date().toLocaleTimeString();
 	return (
 		<Suspense>
 			<p>
 				{title}
-				{timeStr}
+				{`${dateStr} ${timeStr}`}
 			</p>
 		</Suspense>
 	);
